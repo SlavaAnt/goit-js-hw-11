@@ -7,6 +7,7 @@ export default class NewsApiService {
   constructor() {
     this.searchQuery = '';
     this.page = 1;
+    this.perPage = 40;
   }
   // метод класу fetchHits() для http запитів:
   // fetchHits() {
@@ -32,12 +33,12 @@ export default class NewsApiService {
   // }
 
   createRequest() {
-    return `${BASE_URL}?key=${KEY}&q=${this.searchQuery}&image_type=photo&orientation=horizontal&safesearch=true&page=${this.page}&per_page=40`;
+    return `${BASE_URL}?key=${KEY}&q=${this.searchQuery}&image_type=photo&orientation=horizontal&safesearch=true&page=${this.page}&per_page=${this.perPage}`;
   }
 
   async getImages() {
     const response = await axios.get(this.createRequest());
-    this.incrementPage();
+    this.page += 1;
     return response.data;
   }
 

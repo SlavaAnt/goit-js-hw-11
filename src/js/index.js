@@ -10,6 +10,7 @@ const refs = {
   box: document.querySelector('.gallery'),
   btnLoadMore: document.querySelector('.js-load-btn'),
 };
+console.log(refs.form);
 
 // Отримання нового екземпляру класу NewsApiService для отримання об'єкту з методами та властивостями
 const newsApiService = new NewsApiService();
@@ -25,25 +26,37 @@ refs.btnLoadMore.addEventListener('click', onLoadMore);
 function onSearch(e) {
   e.preventDefault();
 
-  // clearBoxGalley();
+  clearBoxGalley();
+
   newsApiService.query = e.currentTarget.elements.searchQuery.value; // При події пошуку отримання доступу до форми та значення інпуту (searchQuery - це значення атрибуту name тегу input у html)
 
   // Перевірка на пустий рядок
   if (newsApiService.query === '') {
-    return onNoImages();
+    return failureMessageOnNoImages();
   }
   newsApiService.resetPage();
+
   newsApiService
     .getImages()
     .then(data => {
-      const hits = data.hits;
-      const totalHits = data.totalHits;
-      if (totalHits > 0) {
-        onTotalHits(totalHits);
-      }
       clearBoxGalley();
-      renderMarkup(hits);
-      refs.btnLoadMore.hidden = false;
+      if (data.hits.length !== 0) {
+        successMessageOnTotalHits(data.totalHits);
+        refs.btnLoadMore.hidden = true;
+
+        if (data.totalHits < newsApiService.perPage) {
+          renderMarkup(data.hits);
+          refs.btnLoadMore.hidden = true;
+        } else {
+          renderMarkup(data.hits);
+          refs.btnLoadMore.hidden = false;
+          console.log(data.hits.length);
+          console.log(newsApiService.page);
+          // newsApiService.incrementPage();
+        }
+      } else {
+        failureMessageOnNoImages();
+      }
     })
     .catch(error => console.log(error))
     .finally(() => refs.form.reset());
@@ -52,14 +65,15 @@ function onSearch(e) {
 }
 //==================================================
 function onLoadMore() {
-  const page = newsApiService.page;
   newsApiService.getImages().then(data => {
-    const hits = data.hits;
-    const totalHits = data.totalHits;
-    renderMarkup(hits);
-    const a = page * hits.length;
+    console.log(data.hits.length);
+    renderMarkup(data.hits);
 
-    if (a > totalHits) {
+    const page = newsApiService.page - 1;
+    console.log(page);
+    const allShownHits = page * data.hits.length;
+    console.log(allShownHits);
+    if (allShownHits === data.totalHits || allShownHits > data.totalHits) {
       refs.btnLoadMore.hidden = true;
       onFreeSearch();
     }
@@ -112,18 +126,17 @@ function onCardMarkup(hits) {
     )
     .join(''); // переведення з масиву до рядка
 }
-//-------------------------------------
-function onNoImages() {
+
+function failureMessageOnNoImages() {
   Notiflix.Notify.failure(
     `❌ "Sorry, there are no images matching your search query. Please try again."`
   );
-}
-function onTotalHits(totalHits) {
-  Notiflix.Notify.success(`✅ Hooray! We found ${totalHits} images.`);
 }
 function onFreeSearch() {
   Notiflix.Notify.failure(
     `❌ "We're sorry, but you've reached the end of search results."`
   );
 }
-//==================================================
+function successMessageOnTotalHits(totalHits) {
+  Notiflix.Notify.success(`✅ Hooray! We found ${totalHits} images.`);
+}
