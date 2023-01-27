@@ -10,7 +10,6 @@ const refs = {
   box: document.querySelector('.gallery'),
   btnLoadMore: document.querySelector('.js-load-btn'),
 };
-console.log(refs.form);
 
 // Отримання нового екземпляру класу NewsApiService для отримання об'єкту з методами та властивостями
 const newsApiService = new NewsApiService();
@@ -50,9 +49,6 @@ function onSearch(e) {
         } else {
           renderMarkup(data.hits);
           refs.btnLoadMore.hidden = false;
-          console.log(data.hits.length);
-          console.log(newsApiService.page);
-          // newsApiService.incrementPage();
         }
       } else {
         failureMessageOnNoImages();
@@ -66,14 +62,11 @@ function onSearch(e) {
 //==================================================
 function onLoadMore() {
   newsApiService.getImages().then(data => {
-    console.log(data.hits.length);
     renderMarkup(data.hits);
-
-    const page = newsApiService.page - 1;
-    console.log(page);
-    const allShownHits = page * data.hits.length;
-    console.log(allShownHits);
-    if (allShownHits === data.totalHits || allShownHits > data.totalHits) {
+    if (
+      refs.box.children.length === data.totalHits ||
+      refs.box.children.length > data.totalHits
+    ) {
       refs.btnLoadMore.hidden = true;
       onFreeSearch();
     }
